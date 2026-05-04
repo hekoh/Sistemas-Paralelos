@@ -66,9 +66,9 @@ int main(int argc, char *argv[])
      pthread_join(threads[i], (void*) &status);
   }
   
-  double workTime = dwalltime() - timetick;
+double workTime = dwalltime() - timetick;
 
-  printf("Multiplicacion de matrices de %dx%d. Tiempo en segundos %f\n",N,N, dwalltime() - timetick);
+  printf("Multiplicacion de matrices de %dx%d. Tiempo en segundos %f\n",N,N, workTime);
 
   for (i = 0; i < N; i++)
   {
