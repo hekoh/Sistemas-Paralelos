@@ -1,2 +1,0 @@
-Tiempo requerido solucion Double: 66.118906
-Tiempo requerido solucion Float: 59.940170
