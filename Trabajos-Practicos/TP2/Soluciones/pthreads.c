@@ -158,6 +158,7 @@ void * tSync(void * ptr){
   for(int i = inicio; i < fin; i++){
       for(int j = 0; j < N; j++){ 
         auxB = B[i+j*N];
+	BTrans[i+j*N] = B[i*N+j];
       	if(auxB < Bmin)
            Bmin = auxB;
       	if(auxB > Bmax)
