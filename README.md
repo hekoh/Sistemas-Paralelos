@@ -12,6 +12,9 @@
 
 * [**Práctica 3**](https://github.com/hekoh/Sistemas-Paralelos/tree/main/Practicas/Practica-3)
 
+* [**Práctica 4**](https://github.com/hekoh/Sistemas-Paralelos/tree/main/Practicas/Practica-4)
+
+
 ## Trabajos Practicos
 * [**Trabajo Practico 1**](https://github.com/hekoh/Sistemas-Paralelos/tree/main/Trabajos-Practicos/TP1)
 * [**Trabajo Practico 2**](https://github.com/hekoh/Sistemas-Paralelos/tree/main/Trabajos-Practicos/TP2)
