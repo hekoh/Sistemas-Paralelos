@@ -1,28 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include <omp.h>
+
 
 #define COORDINATOR 0
+#define MAX_THREADS 100
 
 int main(int argc, char* argv[]){
-	int i, j, k, numProcs, rank, n, stripSize, check=1;
-	double * a, * b, *c;
+	int i, j, k, T, numProcs, provided, rank, n, stripSize, check=1;
+	double * a, * b, *c; 
 	MPI_Status status;
 	double commTime, totalTime, tick[4];
 
-	/* Lee par√°metros de la l√≠nea de comando */
-	if ((argc != 2) || ((n = atoi(argv[1])) <= 0) ) {
+	/* Lee par·metros de la lÌnea de comando */
+	if ((argc != 3) || ((n = atoi(argv[1])) <= 0) || (T = atoi(argv[2])) > MAX_THREADS) {
 	    printf("\nUsar: %s size \n  size: Dimension de la matriz y el vector\n", argv[0]);
 		exit(1);
 	}
 
-	MPI_Init(&argc,&argv);
+	MPI_Init_thread(&argc,&argv, MPI_THREAD_MULTIPLE, &provided);
 
 	MPI_Comm_size(MPI_COMM_WORLD,&numProcs);
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
 	if (n % numProcs != 0) {
-		printf("El tama√±o de la matriz debe ser multiplo del numero de procesos.\n");
+		printf("El tamaÒo de la matriz debe ser multiplo del numero de procesos.\n");
 		exit(1);
 	}
 
@@ -57,42 +60,25 @@ int main(int argc, char* argv[]){
 
 	tick[0] = MPI_Wtime();
 
-        MPI_Scatter(a, stripSize*n, MPI_DOUBLE, a, stripSize*n, MPI_DOUBLE, COORDINATOR, MPI_COMM_WORLD );
+        MPI_Scatter(a, stripSize*n, MPI_DOUBLE, a, stripSize*n, MPI_DOUBLE, COORDINATOR, MPI_COMM_WORLD);
 	MPI_Bcast(b, n*n, MPI_DOUBLE, COORDINATOR, MPI_COMM_WORLD);
-	/* distribuir datos*/
-/*	if (rank==COORDINATOR){
-		for (i=1; i<numProcs; i++) {
 
-			MPI_Send(a+i*stripSize*n, stripSize*n, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-			MPI_Send(b, n*n, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
-		}
-	} else {
-	//	MPI_Recv(a, stripSize*n, MPI_DOUBLE, COORDINATOR, 0, MPI_COMM_WORLD, &status);
-		MPI_Recv(b, n*n, MPI_DOUBLE, COORDINATOR, 1, MPI_COMM_WORLD, &status);
-	}*/
 
 	tick[1] = MPI_Wtime();
 
 	/* computar multiplicacion parcial */
-	for (i=0; i<stripSize; i++) {
-		for (j=0; j<n ;j++ ) {
-			c[i*n+j]=0;
-			for (k=0; k<n ;k++ ) { 
-				c[i*n+j] += (a[i*n+k]*b[j*n+k]); 
-			}
-		}
-	}
-		
+	#pragma omp parallel for num_threads(T) schedule(static)
+	   for (i=0; i<stripSize; i++) {
+		   for (j=0; j<n ;j++ ) {
+			   c[i*n+j]=0;
+			   for (k=0; k<n ;k++ ) { 
+				   c[i*n+j] += (a[i*n+k]*b[j*n+k]); 
+			   }
+		   }
+	   }
+
 	tick[2] = MPI_Wtime();
 
-	// recolectar resultados parciales
-/*	if (rank==COORDINATOR){
-		for (i=1; i<numProcs; i++) {
-			MPI_Recv(c+i*stripSize*n, n*stripSize, MPI_DOUBLE, i, 2, MPI_COMM_WORLD, &status);		
-		}
-	} else
-		MPI_Send(c, n*stripSize, MPI_DOUBLE, COORDINATOR, 2, MPI_COMM_WORLD);
-*/
 	MPI_Gather(c, n*stripSize, MPI_DOUBLE, c, n*stripSize, MPI_DOUBLE, COORDINATOR, MPI_COMM_WORLD);
 
 	tick[3] = MPI_Wtime();
